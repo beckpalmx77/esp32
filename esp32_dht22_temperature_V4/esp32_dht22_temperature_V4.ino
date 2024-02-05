@@ -4,6 +4,7 @@
 // - Adafruit Unified Sensor Lib: https://github.com/adafruit/Adafruit_Sensor
 
 #include <WiFi.h>
+#include <WiFiMulti.h>
 #include <WebServer.h>
 #include <AutoConnect.h>
 #include <time.h>
@@ -12,13 +13,6 @@
 #include <TridentTD_LineNotify.h>
 
 #include <ThingSpeak.h> // always include thingspeak header file after other header files and custom macros
-
-#include <esp_task_wdt.h>
-
-//3 seconds WDT
-#define WDT_TIMEOUT 3
-int i = 0;
-int last = millis();
 
 WebServer Server;
 AutoConnect      Portal(Server);
@@ -104,10 +98,6 @@ void setup() {
   delay(1000);
   Serial.begin(115200);
 
-  Serial.println("Configuring WDT...");
-  esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
-  esp_task_wdt_add(NULL); //add current thread to WDT watch
-
   initWiFi();
 
   Server.on("/", rootPage);
@@ -141,17 +131,6 @@ void loop() {
   Portal.handleClient();
 
   check_wifi();
-
-  // resetting WDT every 2s, 5 times only
-  if (millis() - last >= 2000 && i < 5) {
-    Serial.println("Resetting WDT...");
-    esp_task_wdt_reset();
-    last = millis();
-    i++;
-    if (i == 5) {
-      Serial.println("Stopping WDT reset. CPU should reboot in 3s");
-    }
-  }
 
   delay(2000);
 
