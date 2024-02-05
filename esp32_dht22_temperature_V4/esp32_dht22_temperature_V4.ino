@@ -23,15 +23,15 @@ const int httpPort = 8999;
 unsigned long myChannelNumber = 2413736;            //เลข ID
 const char * myWriteAPIKey = "GU81VWWSDJIO0STE";    //API KEY
 
-
-#define SSID        "SAC_HotSpot"
-#define PASSWORD    "0935757771"
-
-
 /*
-  #define SSID        "work man-home_2.4G"                                     //ใส่ ชื่อ Wifi ที่จะเชื่อมต่อ
-  #define PASSWORD    "0900106833"                                   //ใส่ รหัส Wifi
+  #define SSID        "SAC_HotSpot"
+  #define PASSWORD    "0935757771"
 */
+
+
+#define SSID        "work man-home_2.4G"                                     //ใส่ ชื่อ Wifi ที่จะเชื่อมต่อ
+#define PASSWORD    "0900106833"                                   //ใส่ รหัส Wifi
+
 
 unsigned long previousMillis = 0;
 unsigned long interval = 30000;
