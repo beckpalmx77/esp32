@@ -13,6 +13,13 @@
 
 #include <ThingSpeak.h> // always include thingspeak header file after other header files and custom macros
 
+#include <esp_task_wdt.h>
+
+//3 seconds WDT
+#define WDT_TIMEOUT 3
+int i = 0;
+int last = millis();
+
 WebServer Server;
 AutoConnect      Portal(Server);
 
@@ -56,6 +63,8 @@ DHT dht(DHTPIN, DHTTYPE);
 
 int loop_chk = 0;
 
+int value = 0;
+
 const long  gmtOffset_sec = 7 * 3600;
 const int   daylightOffset_sec = 7 * 3600;
 
@@ -95,6 +104,10 @@ void setup() {
   delay(1000);
   Serial.begin(115200);
 
+  Serial.println("Configuring WDT...");
+  esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
+  esp_task_wdt_add(NULL); //add current thread to WDT watch
+
   initWiFi();
 
   Server.on("/", rootPage);
@@ -123,13 +136,22 @@ void setup() {
 
 }
 
-int value = 0;
-
 void loop() {
 
   Portal.handleClient();
 
   check_wifi();
+
+  // resetting WDT every 2s, 5 times only
+  if (millis() - last >= 2000 && i < 5) {
+    Serial.println("Resetting WDT...");
+    esp_task_wdt_reset();
+    last = millis();
+    i++;
+    if (i == 5) {
+      Serial.println("Stopping WDT reset. CPU should reboot in 3s");
+    }
+  }
 
   delay(2000);
 
@@ -189,13 +211,13 @@ void loop() {
   Serial.println(loop_chk);
 
 
-  if (loop_chk == 6) {
+  if (loop_chk == 4) {
     ESP.restart();
   }
 
 
-  for (int i = 1; i <= 285; ++i) {
-    Serial.print(i);
+  for (int cnt = 1; cnt <= 285; ++cnt) {
+    Serial.print(cnt);
     Serial.print(".");
     digitalWrite(LED_BUILTIN, 0);
     delay(500);
