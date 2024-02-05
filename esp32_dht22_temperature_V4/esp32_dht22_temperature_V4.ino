@@ -4,7 +4,6 @@
 // - Adafruit Unified Sensor Lib: https://github.com/adafruit/Adafruit_Sensor
 
 #include <WiFi.h>
-#include <WiFiMulti.h>
 #include <WebServer.h>
 #include <AutoConnect.h>
 #include <time.h>
@@ -25,7 +24,7 @@ unsigned long myChannelNumber = 2413736;            //เลข ID
 const char * myWriteAPIKey = "GU81VWWSDJIO0STE";    //API KEY
 
 
-#define SSID        "SAC_HotSpot"                                     //ใส่ ชื่อ Wifi ที่จะเชื่อมต่อ
+#define SSID        "SAC_HotSpot"
 #define PASSWORD    "0935757771"
 
 
@@ -189,11 +188,9 @@ void loop() {
   Serial.print("loop_chk = ");
   Serial.println(loop_chk);
 
-
   if (loop_chk == 4) {
     ESP.restart();
   }
-
 
   for (int cnt = 1; cnt <= 285; ++cnt) {
     Serial.print(cnt);
