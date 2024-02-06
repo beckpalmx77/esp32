@@ -98,7 +98,7 @@ void setup() {
   Serial.begin(115200);
 
   // กำหนด Line Token
-  LINE.setToken(LINE_TOKEN);    
+  LINE.setToken(LINE_TOKEN);
 
   initWiFi();
 
@@ -146,7 +146,8 @@ void loop() {
   // Check if any reads failed and exit early (to try again).
   if (isnan(h) || isnan(t) || isnan(f)) {
     Serial.println(F("Failed to read from DHT sensor!"));
-    return;
+    // return;
+    ESP.restart();
   }
 
   printLocalTime();
