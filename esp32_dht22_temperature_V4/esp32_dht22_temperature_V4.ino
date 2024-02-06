@@ -94,8 +94,11 @@ void check_wifi() {
 
 void setup() {
 
-  delay(1000);
+
   Serial.begin(115200);
+
+  // กำหนด Line Token
+  LINE.setToken(LINE_TOKEN);    
 
   initWiFi();
 
@@ -117,8 +120,7 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  // กำหนด Line Token
-  LINE.setToken(LINE_TOKEN);
+
   LINE.notify("Start DHT22 Temperature Application with line " + LINE.getVersion());
   Serial.println(F("Start DHT22 Temperature Application"));
   dht.begin();
