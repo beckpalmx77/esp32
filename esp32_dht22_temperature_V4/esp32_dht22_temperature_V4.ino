@@ -42,6 +42,8 @@ String  variable1   = "-";  //ตัวแปรที่ต้องการ�
 String  variable2   = "-";  //ตัวแปรที่ต้องการจะส่ง
 String  variable3   = "-";  //ตัวแปรที่ต้องการจะส่ง
 String  variable4   = "-";  //ตัวแปรที่ต้องการจะส่ง
+String  variable5   = "-";  //ตัวแปรที่ต้องการจะส่ง
+String  variable6   = "-";  //ตัวแปรที่ต้องการจะส่ง
 
 #define LINE_TOKEN  "XWPadPbBvbZUU6ZD2a4JCPCQaGdUg48tZEYxX0N3UTb" //ใส่ รหัส TOKEN ที่ได้มาจากข้างบน
 
@@ -188,6 +190,8 @@ void loop() {
   variable2 = String(f);
   variable3 = String(h);
   variable4 = String(hic);
+  variable5 = String(WiFi.localIP().toString());
+  variable6 = String(SSID);
   send_data();
 
   digitalWrite(LED_BUILTIN, 1);
@@ -246,7 +250,11 @@ void send_data() {
     Serial.println("connection failed");
     return;
   }
-  String url = "/sac_empl/model/get_temperature.php?temp_c=" + variable1 + "&temp_f=" + variable2 + "&humidity=" + variable3 + "&heat_index=" + variable4;      //ชุด Directory ที่เก็บไฟล์ และตัวแปรที่ต้องการจะฝาก
+
+  String url = "/sac_empl/model/get_temperature.php?temp_c=" + variable1 + "&temp_f=" + variable2 + "&humidity=" + variable3 + "&heat_index=" + variable4 + "&ip_address=" + variable5 + "&ssid=" + variable6;
+  /* + "&ip_address=" + String(WiFi.localIP()) + "&ssid=" + String(SSID); */
+
+  //ชุด Directory ที่เก็บไฟล์ และตัวแปรที่ต้องการจะฝาก
 
   /* url += variable;                          //ส่งค่าตัวแปร */
 
