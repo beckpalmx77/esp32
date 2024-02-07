@@ -70,7 +70,9 @@ void rootPage() {
 void initWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(SSID, PASSWORD);
-  Serial.print("Connecting to WiFi ..");
+  Serial.print("Connecting to WiFi .. ");
+  Serial.println(SSID);
+
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print('.');
     delay(1000);
@@ -122,7 +124,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
 
-  LINE.notify("Start DHT22 Temperature Application with line " + LINE.getVersion());
+  LINE.notify("IP Address " + WiFi.localIP().toString() + " Start DHT22 Temperature Application with LINE " + LINE.getVersion());
   Serial.println(F("Start DHT22 Temperature Application"));
   dht.begin();
 
@@ -134,7 +136,7 @@ void loop() {
 
   check_wifi();
 
-  delay(2000);
+  delay(6000);
 
   // Reading temperature or humidity takes about 250 milliseconds!
   // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
@@ -144,11 +146,13 @@ void loop() {
   // Read temperature as Fahrenheit (isFahrenheit = true)
   float f = dht.readTemperature(true);
 
+  delay(2000);
+
   // Check if any reads failed and exit early (to try again).
   if (isnan(h) || isnan(t) || isnan(f)) {
     Serial.println(F("Failed to read from DHT sensor!"));
-    // return;
-    ESP.restart();
+    return;
+    // ESP.restart();
   }
 
   printLocalTime();
@@ -192,18 +196,24 @@ void loop() {
   Serial.print("loop_chk = ");
   Serial.println(loop_chk);
 
-  if (loop_chk == 4) {
+  if (loop_chk == 3) {
     ESP.restart();
   }
 
+
   for (int cnt = 1; cnt <= 285; ++cnt) {
-    Serial.print(cnt);
-    Serial.print(".");
+
+    if ((cnt % 10) == 0) {
+      Serial.print(cnt);
+    } else {
+      Serial.print(".");
+    }
     digitalWrite(LED_BUILTIN, 0);
     delay(500);
     digitalWrite(LED_BUILTIN, 1);
     delay(500);
   }
+  Serial.println("");
 
   //delay(320000);
 
@@ -259,12 +269,12 @@ void send_data() {
   // Read all the lines of the reply from server and print them to Serial
   while (client.available()) {
     String line = client.readStringUntil('\r');
-    Serial.print(line);
+    Serial.println(line);
   }
 
   digitalWrite(2, LOW);
 
-  Serial.println();
+  Serial.println("Send Data To DB Server ... ");
   Serial.println("closing connection");
 
 }
