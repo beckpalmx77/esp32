@@ -8,6 +8,7 @@
 #include <AutoConnect.h>
 #include <time.h>
 #include <DHT.h>
+#include <Adafruit_Sensor.h>
 #include <Ticker.h>
 #include <TridentTD_LineNotify.h>
 
