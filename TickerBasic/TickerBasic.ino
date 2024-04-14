@@ -1,51 +1,48 @@
-/*
-  Basic Ticker usage
-
-  Ticker is an object that will call a given function with a certain period.
-  Each Ticker calls one function. You can have as many Tickers as you like,
-  memory being the only limitation.
-
-  A function may be attached to a ticker and detached from the ticker.
-  There are two variants of the attach function: attach and attach_ms.
-  The first one takes period in seconds, the second one in milliseconds.
-
-  The built-in LED will be blinking.
-*/
-
 #include <Ticker.h>
 
-Ticker flipper;
+#define relay1 D0
+#define relay2 D1
+#define relay3 D2
 
-int count = 0;
+Ticker tm500ms;
 
-void flip() {
+int loop_cnt = 0;
+
+void  myToggle() {
+
   int state = digitalRead(LED_BUILTIN);  // get the current state of GPIO1 pin
+  int state1 = digitalRead(relay1);  // get the current state of GPIO1 pin
+  int state2 = digitalRead(relay2);  // get the current state of GPIO1 pin
+  int state3 = digitalRead(relay2);  // get the current state of GPIO1 pin
   digitalWrite(LED_BUILTIN, !state);     // set pin to the opposite state
+  digitalWrite(relay1, !state1);     // set pin to the opposite state
+  digitalWrite(relay2, !state2);     // set pin to the state
+  digitalWrite(relay3, !state3);     // set pin to the opposite state
+  loop_cnt++;
+  Serial.print("loop = ");
+  Serial.println(loop_cnt);
 
-  ++count;
-  // when the counter reaches a certain value, start blinking like crazy
-  if (count == 20) {
-    flipper.attach(0.1, flip);
+  if (loop_cnt == 15) {
+    ESP.restart();
   }
-  // when the counter reaches yet another value, stop blinking
-  else if (count == 120) {
-    flipper.detach();
-  }
+
 }
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);
 
-  // flip the pin every 0.3s
-  flipper.attach(0.3, flip);
+  Serial.begin(115200);
+  Serial.println();
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(relay1, OUTPUT);
+  pinMode(relay2, OUTPUT);
+  pinMode(relay3, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(relay1, LOW);
+  digitalWrite(relay2, HIGH);
+  digitalWrite(relay3, LOW);
+  tm500ms.attach(5, myToggle);
+
 }
 
 void loop() {
-
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(1000);
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(1000);
-
 }

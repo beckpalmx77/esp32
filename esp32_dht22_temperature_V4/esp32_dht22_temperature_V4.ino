@@ -43,7 +43,7 @@ String  variable2   = "-";  //ตัวแปรที่ต้องการ�
 String  variable3   = "-";  //ตัวแปรที่ต้องการจะส่ง
 String  variable4   = "-";  //ตัวแปรที่ต้องการจะส่ง
 String  variable5   = "-";  //ตัวแปรที่ต้องการจะส่ง
-String  variable6   = "-";  //ตัวแปรที่ต้องการจะส่ง
+String  variable6   = "PS33_24G";  //ตัวแปรที่ต้องการจะส่ง
 
 #define LINE_TOKEN  "XWPadPbBvbZUU6ZD2a4JCPCQaGdUg48tZEYxX0N3UTb" //ใส่ รหัส TOKEN ที่ได้มาจากข้างบน
 
@@ -58,6 +58,8 @@ const char* ntpServer = "pool.ntp.org";
 DHT dht(DHTPIN, DHTTYPE);
 
 int loop_chk = 0;
+
+int check_temperature_false = 0;
 
 int value = 0;
 
@@ -126,7 +128,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
 
-  LINE.notify("IP Address " + WiFi.localIP().toString() + " Start DHT22 Temperature Application with LINE " + LINE.getVersion());
+  LINE.notify("Start DHT22 Temperature Application with LINE " + LINE.getVersion() + " IP Address " + WiFi.localIP().toString());
   Serial.println(F("Start DHT22 Temperature Application"));
   dht.begin();
 
@@ -135,7 +137,6 @@ void setup() {
 void loop() {
 
   Portal.handleClient();
-
   check_wifi();
 
   delay(6000);
@@ -148,16 +149,23 @@ void loop() {
   // Read temperature as Fahrenheit (isFahrenheit = true)
   float f = dht.readTemperature(true);
 
+  printLocalTime();
+
   delay(2000);
 
   // Check if any reads failed and exit early (to try again).
   if (isnan(h) || isnan(t) || isnan(f)) {
-    Serial.println(F("Failed to read from DHT sensor!"));
-    return;
-    // ESP.restart();
+    check_temperature_false++;
+    Serial.print(F("Failed to read from DHT sensor! "));
+    Serial.println(check_temperature_false);
+    if (check_temperature_false == 5) {
+      delay(5000);
+      ESP.restart();
+    } else {
+      return;
+    }
   }
 
-  printLocalTime();
 
   // Compute heat index in Fahrenheit (the default)
   float hif = dht.computeHeatIndex(f, h);
@@ -191,7 +199,7 @@ void loop() {
   variable3 = String(h);
   variable4 = String(hic);
   variable5 = String(WiFi.localIP().toString());
-  variable6 = String(SSID);
+
   send_data();
 
   digitalWrite(LED_BUILTIN, 1);
@@ -200,12 +208,12 @@ void loop() {
   Serial.print("loop_chk = ");
   Serial.println(loop_chk);
 
-  if (loop_chk == 3) {
+  if (loop_chk == 5) {
     ESP.restart();
   }
 
 
-  for (int cnt = 1; cnt <= 285; ++cnt) {
+  for (int cnt = 1; cnt <= 160; ++cnt) {
 
     if ((cnt % 10) == 0) {
       Serial.print(cnt);

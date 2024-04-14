@@ -1,176 +1,50 @@
-#include <Arduino.h>
+#ifdef ESP32
+#include <WiFi.h>
+#define DHTPIN 4
+#elif defined(ESP8266)
 #include <ESP8266WiFi.h>
-#include <Hash.h>
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <Adafruit_Sensor.h>
-#include <DHT.h>
+#define DHTPIN D4
+#endif
 #include <TridentTD_LineNotify.h>
 
-// Replace with your network credentials
-const char* ssid = "work man-home_2.4G";
-const char* password = "0900106833";
-
-#define LINE_TOKEN  "XWPadPbBvbZUU6ZD2a4JCPCQaGdUg48tZEYxX0N3UTb"   //ใส่ TOKEN
-
-#define DHTPIN 5     // Digital pin connected to the DHT sensor
-
-// Uncomment the type of sensor in use:
-//#define DHTTYPE    DHT11     // DHT 11
-#define DHTTYPE    DHT22     // DHT 22 (AM2302)
-//#define DHTTYPE    DHT21     // DHT 21 (AM2301)
+#include "DHT.h"
+#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 
 DHT dht(DHTPIN, DHTTYPE);
 
-// current temperature & humidity, updated in loop()
-float t = 0.0;
-float h = 0.0;
-
-// Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
-
-// Generally, you should use "unsigned long" for variables that hold time
-// The value will quickly become too large for an int to store
-unsigned long previousMillis = 0;    // will store last time DHT was updated
-
-// Updates DHT readings every 10 seconds
-const long interval = 10000;
-
-const char index_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML><html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-  <style>
-    html {
-     font-family: Arial;
-     display: inline-block;
-     margin: 0px auto;
-     text-align: center;
-    }
-    h2 { font-size: 3.0rem; }
-    p { font-size: 3.0rem; }
-    .units { font-size: 1.2rem; }
-    .dht-labels{
-      font-size: 1.5rem;
-      vertical-align:middle;
-      padding-bottom: 15px;
-    }
-  </style>
-</head>
-<body>
-  <h2>ESP8266 DHT Server</h2>
-  <p>
-    <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> 
-    <span class="dht-labels">Temperature</span> 
-    <span id="temperature">%TEMPERATURE%</span>
-    <sup class="units">&deg;C</sup>
-  </p>
-  <p>
-    <i class="fas fa-tint" style="color:#00add6;"></i> 
-    <span class="dht-labels">Humidity</span>
-    <span id="humidity">%HUMIDITY%</span>
-    <sup class="units">%</sup>
-  </p>
-</body>
-<script>
-setInterval(function ( ) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("temperature").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "/temperature", true);
-  xhttp.send();
-}, 10000 ) ;
-
-setInterval(function ( ) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("humidity").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "/humidity", true);
-  xhttp.send();
-}, 10000 ) ;
-</script>
-</html>)rawliteral";
-
-// Replaces placeholder with DHT values
-String processor(const String& var) {
-  //Serial.println(var);
-  if (var == "TEMPERATURE") {
-    return String(t);
-  }
-  else if (var == "HUMIDITY") {
-    return String(h);
-  }
-  return String();
-}
+#define SSID        "work man-home_2.4G"                                     //ใส่ ชื่อ Wifi ที่จะเชื่อมต่อ
+#define PASSWORD    "0900106833"                                   //ใส่ รหัส Wifi
+#define LINE_TOKEN  "XWPadPbBvbZUU6ZD2a4JCPCQaGdUg48tZEYxX0N3UTb" //ใส่ รหัส TOKEN ที่ได้มาจากข้างบน
 
 void setup() {
-  // Serial port for debugging purposes
   Serial.begin(115200);
   dht.begin();
-
-  // Connect to Wi-Fi
-  WiFi.begin(ssid, password);
-  Serial.println("Connecting to WiFi");
+  Serial.println(LINE.getVersion());
+  WiFi.begin(SSID, PASSWORD);
+  Serial.printf("WiFi connecting ",  SSID);
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println(".");
+    Serial.print(".");
+    delay(400);
   }
-
-  // Print ESP8266 Local IP Address
+  Serial.printf("\nWiFi connected\nIP : ");
   Serial.println(WiFi.localIP());
-
   LINE.setToken(LINE_TOKEN);
-
-  // Route for root / web page
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send_P(200, "text/html", index_html, processor);
-  });
-  server.on("/temperature", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send_P(200, "text/plain", String(t).c_str());
-  });
-  server.on("/humidity", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send_P(200, "text/plain", String(h).c_str());
-  });
-
-  // Start server
-  server.begin();
 }
-
 void loop() {
 
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    // save the last time you updated the DHT values
-    previousMillis = currentMillis;
-    // Read temperature as Celsius (the default)
-    float newT = dht.readTemperature();
-    // Read temperature as Fahrenheit (isFahrenheit = true)
-    //float newT = dht.readTemperature(true);
-    // if temperature read failed, don't change t value
-    if (isnan(newT)) {
-      Serial.println("Failed to read from DHT sensor!");
-    }
-    else {
-      t = newT;
-      Serial.println(t);
-    }
-    // Read Humidity
-    float newH = dht.readHumidity();
-    // if humidity read failed, don't change h value
-    if (isnan(newH)) {
-      Serial.println("Failed to read from DHT sensor!");
-    }
-    else {
-      h = newH;
-      Serial.println(h);
-    }
+  delay(2000);
+  
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  float f = dht.readTemperature(true);
+  if (isnan(h) || isnan(t) || isnan(f)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
   }
-
+  if(t>0){         //หากอุณหภูมิมากกว่า 30°C จะแจ้งเตือนไปยังไลน์
+    LINE.notify("อุณหภูมิ = " + String(t) + " C");
+    delay(5000);
+  }
+  Serial.println(t);
+  delay(100);
 }
